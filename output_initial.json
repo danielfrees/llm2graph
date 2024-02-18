@@ -1,0 +1,34 @@
+{
+    "items": {
+        "apple": {
+            "serving": "1 medium apple",
+            "type": "fruit",
+            "calories": "105",
+            "protein": "1",
+            "carbs": "25",
+            "fat": "0",
+            "extra": "Apples are a good source of fiber, and are great for snacking."
+        },
+        "cinnamon": {
+            "serving": "1 teaspoon",
+            "type": "spice",
+            "calories": "8",
+            "protein": "0",
+            "carbs": "0",
+            "fat": "0",
+            "extra": "Cinnamon adds a warm, sweet flavor to dishes."
+        }
+    },
+    "relations": {
+        "1": {
+            "from": "apple",
+            "to": "cinnamon",
+            "relation": "pairsWith"
+        },
+        "2": {
+            "from": "cinnamon",
+            "to": "apple",
+            "relation": "pairsWith"
+        }
+    }
+}
