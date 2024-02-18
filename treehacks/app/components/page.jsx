@@ -14,6 +14,7 @@ export function HomePage() {
   });
   const [input, setInput] = useState("");
   const [isEnlarged, setIsEnlarged] = useState(false);
+  const [imageUrl, setImageUrl] = useState('/result_image.png');
 
   const getMessages = async () => {
     var response = { "role": "assistant", "content": "I am a bot"}
@@ -50,11 +51,13 @@ export function HomePage() {
   const onSubmitInput = async () => {
     if (input.trim() === "") return;
     setLoading(true);
+    setMessages([...messages, input]);
+    setImageUrl(`/result_image.png?${Date.now()}`);
+
+    setInput("");
     const aimessage = await getMessages();
     setMessages([...messages, input, aimessage]);
     setLoading(false);
-    setInput("");
-    console.log(messages);
   }
   const handleKeyDown = (event) => {
     // Check if the key pressed is the Enter key
@@ -85,9 +88,12 @@ export function HomePage() {
       </nav>
       <div className="container mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between items-center mt-8">
-          <div className="flex flex-col items-center space-y-6">
-            <img className ={`cursor-pointer justify-center rounded-lg ${isEnlarged ? 'w-[50vw] max-w-none h-auto' : 'w-auto h-auto'}`} src = "https://i.stack.imgur.com/ZfipQ.png" onDoubleClick={toggleEnlarged}/>
+          {loading? <div className="flex justify-center items-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900"></div>
+              </div>:<div className="flex flex-col items-center space-y-6">
+            <img className ={`cursor-pointer justify-center rounded-lg ${isEnlarged ? 'w-[50vw] max-w-none h-auto' : 'w-auto h-auto'}`} src = {imageUrl} onDoubleClick={toggleEnlarged}/>
           </div>
+          }
           <div className = "m-2.5"></div>
           <div className={`bg-white rounded-lg shadow-lg p-6 ${isEnlarged ? 'w-auto' : 'sm:w-[50vw]'} `}>
               <div className="flex flex-col space-y-6">
@@ -102,8 +108,12 @@ export function HomePage() {
               <div class="w-full h-1 bg-black"></div>
 
               <ChatComponent messages = {messages} />
+              {loading? <div className="flex justify-center items-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900"></div>
+              </div> : <></>
+              }
               <div className="flex items-center">
-                <Input className="flex-1" placeholder="Type something" value = {input} onChange = {handleInputChange} onKeyDown = {handleKeyDown}/>
+                <Input className="flex-1" disabled={loading} placeholder="Type something" value = {input} onChange = {handleInputChange} onKeyDown = {handleKeyDown} />
                 <Button className="ml-2 bg-black text-white" variant="secondary" onClick = {onSubmitInput}>
                   {`>`}
                 </Button>

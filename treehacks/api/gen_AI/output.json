@@ -9,7 +9,7 @@
             "fat": "0"
         },
         "cinnamon": {
-            "serving": "1 teaspoon",
+            "serving": "1/4 teaspoon",
             "type": "spice",
             "calories": "1",
             "protein": "0",
@@ -18,10 +18,10 @@
         },
         "cake": {
             "serving": "1 slice",
-            "type": "carbohydrate",
-            "calories": "150",
+            "type": "food item",
+            "calories": "200",
             "protein": "2",
-            "carbs": "25",
+            "carbs": "30",
             "fat": "5"
         }
     },
@@ -39,12 +39,12 @@
         "3": {
             "from": "apple",
             "to": "cake",
-            "relation": "isIngredient"
+            "relation": "ingredient"
         },
         "4": {
             "from": "cinnamon",
             "to": "cake",
-            "relation": "isIngredient"
+            "relation": "ingredient"
         }
     }
 }

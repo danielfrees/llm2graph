@@ -1,20 +1,23 @@
 import json
 import networkx as nx
 import requests
+from dotenv import load_dotenv
 import os
 import predictionguard as pg
 import re
+import matplotlib
+matplotlib.use('Agg')  # Use the Anti-Grain Geometry (Agg) backend that supports saving files without needing a display
 from matplotlib import pyplot as plt
 import textwrap
 import random
 
+load_dotenv()
 
 #Refresh key into env
 INTEL_KEY = os.getenv("PREDICTION_GUARD_API")
 INTEL_KEY = 'q1VuOjnffJ3NO2oFN8Q9m8vghYc84ld13jaqdF7E'
 os.environ["PREDICTIONGUARD_TOKEN"] = INTEL_KEY
 random.seed(123)
-
 
 
 def query_prediction_guard(query : str):
@@ -25,18 +28,17 @@ def query_prediction_guard(query : str):
     result = pg.Completion.create(
         model="Nous-Hermes-Llama2-13B",  #"Yi-34B-Chat", sqlcoder-34b-alpha, Nous-Hermes-Llama2-13B
         prompt=query,
-        # max_tokens=500
+        max_tokens=1000
     )
     return result
 
-
-def main():
+def main(input: str = "Apples and cinnamon go well together. Apples and cinnamon together can make a new item called cake"):
     """ 
     Run LLM knowledge graph extraction experiment.
     """
 
     print("=== Querying Intel Prediction Guard ===\n")
-    input = "You can make an apple pie with apples and cinnamon."
+    input = "Apples and cinnamon go well together. Apples and cinnamon together can make a new item called cake"
     
     JSON_PROMPT = f"""
         ### Instruction
@@ -47,7 +49,7 @@ def main():
 
         `ALLOWED ENTITY TYPES`: Fruit, Vegetable, Carbohydrate, Protein, Fat, Spice 
 
-        `ALLOWED ENTITY FEATURES:` Calories (integer), Protein (integer, unit: grams), Carbs (integer, unit: grams), Fat (integer, unit: grams), Cost (float, unit: US Dollars), Extra (string, brief extra information)
+        `ALLOWED ENTITY FEATURES:` Calories (integer), Protein (integer, unit: grams), Carbs (integer, unit: grams), Fat (integer, unit: grams)
 
         `ALLOWED RELATION TYPES`: pairsWith (ie. A pairs well with B), badWith (ie. A does not taste good with B), isFavorite (ie. A is always preferred if possible), leastFavorite (ie. A is never desired)
 
@@ -65,7 +67,6 @@ def main():
                     "protein": "1",
                     "carbs": "28",
                     "fat": "0",
-                    "extra": "Bananas are rich in potassium and high in sugar."
                 }}
             }},
             "relations": {{
@@ -87,7 +88,6 @@ def main():
                     "protein": "1",
                     "carbs": "28",
                     "fat": "0",
-                    "extra": "Bananas are rich in potassium and high in sugar."
                 }}
             }},
             "relations": {{
@@ -110,7 +110,6 @@ def main():
                     "protein": "0", 
                     "carbs": "1",
                     "fat": "0",
-                    "extra": "Garlic has a strong odor and taste, and is excellent in sauces."
                 }},
                 "salmon" : {{
                     "serving": "100 grams",
@@ -119,7 +118,6 @@ def main():
                     "protein": "19", 
                     "carbs": "0",
                     "fat": "7",
-                    "extra": "Salmon is an excellent source of Omega 3s."
                 }}
             }},
             "relations": {{
@@ -148,7 +146,6 @@ def main():
                     "protein": "0", 
                     "carbs": "1",
                     "fat": "0",
-                    "extra": "Garlic has a strong odor and taste, and is excellent in sauces."
                 }},
                 "salmon" : {{
                     "serving": "100 grams",
@@ -157,7 +154,6 @@ def main():
                     "protein": "19", 
                     "carbs": "0",
                     "fat": "7",
-                    "extra": "Salmon is an excellent source of Omega 3s."
                 }}
             }},
             "relations": {{
@@ -178,17 +174,29 @@ def main():
     {input}
 
     ### RULES:
-    
+    Make sure that the output is in JSON format.
+
+    ### OUTPUT:
     """
 
     result = query_prediction_guard(query = JSON_PROMPT)
     json_rules = result['choices'][0]['text']
+    print(json_rules)
     output = truncate(json_rules)
-    print("\n=== Extracted Recipe Rule Information ===\n")
-    print(output)
+
+    while not is_valid_json(output):
+        # print(output)
+        # print("Invalid JSON output, retrying...")
+        result = query_prediction_guard(query=JSON_PROMPT)
+        json_rules = result['choices'][0]['text']
+        output = truncate(json_rules)
+
+
+    # print("\n=== Extracted Recipe Rule Information ===\n")
+    # print(output)
 
     # Load the existing JSON data from a file
-    with open('output_initial.json', 'r') as file:
+    with open('output.json', 'r') as file:
         base_graph = json.load(file)
 
     # Convert the output string to a JSON object (assuming the output is valid JSON)
@@ -212,7 +220,16 @@ def main():
     output_json = json.loads(output)
     base_graph.update(output_json)
 
+
     create_graph(base_graph)
+
+def is_valid_json(data):
+    # This function checks if a string is valid JSON
+    try:
+        json.loads(data)
+        return True
+    except json.JSONDecodeError:
+        return False
 
 def truncate(s):
     open_brackets = 0
@@ -226,10 +243,12 @@ def truncate(s):
 
         if open_brackets == close_brackets:
             return s[:i+1]
+
     return s
 
 
 def create_graph(json_data):
+    print("creating graph")
     # If json_data is already a dictionary, no need to parse it
     if isinstance(json_data, dict):
         data = json_data
@@ -239,7 +258,6 @@ def create_graph(json_data):
             data = json.loads(json_data)
         except json.JSONDecodeError:
             print("json_data is not valid JSON.")
-            return
     # Load JSON data into a Python dictionary
 
     # Create a directed graph
@@ -288,8 +306,9 @@ def create_graph(json_data):
 
     ax.set_xlim(xlim[0] - x_margin, xlim[1] + x_margin)
     ax.set_ylim(ylim[0] - y_margin, ylim[1] + y_margin)
-
-    plt.show()
+    # plt.show()
+    print("saving image")
+    plt.savefig("/Users/leowei/Development/reAInforce/treehacks/public/result_image.png")
 
 if __name__ == "__main__":
     main()

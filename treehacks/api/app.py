@@ -3,6 +3,10 @@ import os
 import json
 import predictionguard as pg
 from flask_cors import CORS
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+from gen_AI import main, create_graph, query_prediction_guard, is_valid_json, truncate
 
 # Set your Prediction Guard token as an environmental variable.
 os.environ["PREDICTIONGUARD_TOKEN"] = "q1VuOjnffJ3NO2oFN8Q9m8vghYc84ld13jaqdF7E"
@@ -17,6 +21,7 @@ messages = [
         "content": "Well, technically vertically out from the center of the earth."
     },
 ]
+
 
 
 api = Flask(__name__)
@@ -40,7 +45,12 @@ def post_response():
         messages=messages
     )
     messages.append({"role": "assistant", "content": result['choices'][-1]['message']['content']})
-    
+    imarray = np.random.rand(100,100,3) * 255
+    im = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
+    im.save('../public/result_image.png')
+    print("LLM Stuff")
+    main()
+
     return json.dumps(messages[-1])
 
 @api.route('/', methods=["DELETE"])
