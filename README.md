@@ -1,4 +1,4 @@
-# llm2net
+# llm2graph
 
 Automation extraction of game / policy rules from natural language inputs using LLMs. Enables structural data mining of LLM's semantic understanding of the world into a more trustworthy, structured form. 
 
